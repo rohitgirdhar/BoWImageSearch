@@ -4,10 +4,7 @@ function model = bow_computeVocab(imgsDir, params)
 bow_config;
 
 %% Get the image files
-img_file_endings = '((.jpg)|(.png)|(.gif)|(.JPEG)|(.JPG)|(.jpeg)|(.bmp))$';
-frpaths = getAllFiles(imgsDir); % recursive search img files relative to imgsDir
-imgFilesOrNot = regexp(frpaths, img_file_endings);
-frpaths(cellfun(@isempty, imgFilesOrNot)) = []; % keep only image files
+frpaths = getImgFilesList(imgsDir);
 fullpaths = cellfun2(@(x) fullfile(imgsDir, x), frpaths);
 
 %% Read images and create set of SIFTs
@@ -20,6 +17,7 @@ for i = 1 : size(fullpaths, 1)
 end
 
 %% K Means cluster the SIFTs, and create a model
+model.vocabSize = params.numWords;
 model.vocab = vl_kmeans(double(descs), ...
                         min(size(descs, 2), params.numWords), 'verbose', ...
                         'algorithm', 'ANN');
