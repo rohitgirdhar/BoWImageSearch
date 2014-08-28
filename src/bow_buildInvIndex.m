@@ -20,7 +20,8 @@ iindex.vw2imgsList = containers.Map('KeyType', 'int64', 'ValueType', 'any');
 for i = 1 : model.vocabSize
     iindex.vw2imgsList(i) = [];
 end
-wbar = waitbar(0, 'Computing inv index over all images');
+
+textprogressbar('Computing inv index over all images: ');
 for i = 1 : iindex.numImgs
     I = imread(fullpaths{i});
     [~, d] = bow_computeImageRep(I, model);
@@ -28,6 +29,6 @@ for i = 1 : iindex.numImgs
     for j = 1 : numel(d)
         iindex.vw2imgsList(d(j)) = [iindex.vw2imgsList(d(j)), i];
     end
-    waitbar(i / iindex.numImgs);
+    textprogressbar(i * 100 / iindex.numImgs);
 end
-close(wbar);
+textprogressbar(' Done');
