@@ -6,7 +6,10 @@ function [f, bins] = bow_computeImageRep(I, model)
 % @return : f (Same as from vl_sift) and bins = quantized descriptor values
 
 bow_config;
-
-I = single(rgb2gray(I));
+try % to handle gray images
+    I = rgb2gray(I); 
+catch
+end
+I = single(I);
 [f, d] = vl_sift(I);
 bins = double(vl_kdtreequery(model.kdtree, model.vocab, double(d)));
