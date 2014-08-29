@@ -1,12 +1,13 @@
-function res = bow_imageSearch(I, model, iindex, config)
+function [imgPaths, scores] = bow_imageSearch(I, model, iindex, config)
 % Returns the top matches to I from the inverted index 'iindex' computed
 % using bow_buildInvIndex
 % Uses TF-IDF based scoring to rank
 % config has following flags
 % config.geomRerank = 1 => do geometric reranking for topn results
 % config.topn = n => output top 'n' results (defaults to 10)
-% @return : a cell array with 2 elements: {1} is the list of image paths in
-% ranked order, {2} is the corresponding scores.
+% @return : imgPaths is the list of image paths in ranked order
+% @return scores : is the corresponding scores - tf-idf in general, or
+% number of inliers if doing geometric reranking
 
 bow_config;
 
@@ -35,12 +36,11 @@ scores = scores(:, 1 : config.topn);
 imgIDs = imgIDs(:, 1 : config.topn);
 imgPaths = arrayfun(@(x) iindex.imgPaths(x), imgIDs);
 if isfield(config, 'geomRerank') && config.geomRerank
-    res = bow_geomRerank(imgPaths, iindex.dirname, model, f, d);
-else
-    res = {imgPaths, scores};
+    [imgPaths, scores] = bow_geomRerank(imgPaths, iindex.dirname, ...
+                            model, f, d);
 end
 
-function res = bow_geomRerank(imgPaths, dirname, model, f, d)
+function [imgPaths, scores] = bow_geomRerank(imgPaths, dirname, model, f, d)
 % rerranks the rank list (only topn of it) based on number of geometrically
 % consistent inliers
 % @param imgPaths : full paths of images
@@ -62,4 +62,5 @@ for i = 1 : numel(fullpaths)
 end
 textprogressbar(' Done');
 [numInliers, indexes] = sort(numInliers, 'descend');
-res = {imgPaths(indexes), numInliers};
+imgPaths = imgPaths(indexes);
+scores = numInliers;

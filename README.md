@@ -35,9 +35,9 @@ In MATLAB:
 >> I = imread('path/to/img.jpg');
 >> config.topn = 10; % set the number of top matches to retrieve
 >> config.geomRerank = 1; % set to have geometric reranking, ignore if not.
->> res = bow_imageSearch(I, model, iindex, config);
->> res{1} % prints the image paths (relative to base directory) of top matches
->> res{2} % prints the scores: tf-idf without geometric reranking, and #inliers with geometric reranking
+>> [imgPaths, scores] = bow_imageSearch(I, model, iindex, config);
+>> imgPaths % prints the image paths (relative to base directory) of top matches
+>> scores % prints the scores: tf-idf without geometric reranking, and #inliers with geometric reranking
 ```
 Note: Geometric reranking done by fitting a fundamental matrix using RANSAC, and counting the number of inliers.
 
