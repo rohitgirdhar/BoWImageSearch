@@ -15,11 +15,11 @@ fullpaths = cellfun2(@(x) fullfile(imgsDir, x), iindex.imgPaths);
 
 %% create inverted index
 iindex.totalDescriptors = zeros(iindex.numImgs, 1); % will store the total # of words in each image
-% Create a cell array of vocabSize containers. (Assuming vocab ids are 1..n
-% Each element stores (imgID : times that VW appears in that image)
+% Create a cell array of vocabSize containers.Map (Assuming vocab ids are
+% 1..n). Each element stores <imgID : times that VW appears in that image>
 % Have to call it multiple times to initialize in a loop.. using 
-% repmat or deal simply makes multiple references to same object and that 
-% doesn't work
+% `repmat` or `deal` simply makes multiple references to same object and 
+% that doesn't work
 for i = 1 : model.vocabSize
     iindex.vw2imgsList{i} = ...
         containers.Map('KeyType', 'int64', 'ValueType', 'int64');
