@@ -19,7 +19,7 @@ end
 scores = zeros(1, iindex.numImgs);
 for i = 1 : numel(d)
     vw = d(i);
-    imgs2count = iindex.vw2imgsList(vw);
+    imgs2count = iindex.vw2imgsList{vw};
     imgsList = imgs2count.keys;
     idf = log10(double(iindex.numImgs / (numel(imgsList) * 1.0)));
     for j = 1 : numel(imgsList)

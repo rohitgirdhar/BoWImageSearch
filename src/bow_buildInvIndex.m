@@ -15,12 +15,14 @@ fullpaths = cellfun2(@(x) fullfile(imgsDir, x), iindex.imgPaths);
 
 %% create inverted index
 iindex.totalDescriptors = zeros(iindex.numImgs, 1); % will store the total # of words in each image
-% initialize the inverted index map
-iindex.vw2imgsList = containers.Map('KeyType', 'int64', 'ValueType', 'any');
+% Create a cell array of vocabSize containers. (Assuming vocab ids are 1..n
+% Each element stores (imgID : times that VW appears in that image)
+% Have to call it multiple times to initialize in a loop.. using 
+% repmat or deal simply makes multiple references to same object and that 
+% doesn't work
 for i = 1 : model.vocabSize
-    % each element stores (imgID : times that VW appears in that image)
-    iindex.vw2imgsList(i) = containers.Map('KeyType', 'int64', ...
-                                           'ValueType', 'int64');
+    iindex.vw2imgsList{i} = ...
+        containers.Map('KeyType', 'int64', 'ValueType', 'int64');
 end
 
 textprogressbar('Computing inv index over all images: ');
@@ -29,13 +31,13 @@ for i = 1 : iindex.numImgs
     [~, d] = bow_computeImageRep(I, model);
     iindex.totalDescriptors(i) = numel(d);
     for j = 1 : numel(d)
-        imgsList = iindex.vw2imgsList(d(j));
+        imgsList = iindex.vw2imgsList{d(j)};
         if imgsList.isKey(i)
             imgsList(i) = imgsList(i) + 1;
         else
             imgsList(i) = 1;
         end
-        iindex.vw2imgsList(d(j)) = imgsList;
+        iindex.vw2imgsList{d(j)} = imgsList;
     end
     textprogressbar(i * 100 / iindex.numImgs);
 end
