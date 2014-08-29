@@ -16,6 +16,7 @@ end
 
 [f, d] = bow_computeImageRep(I, model);
 scores = zeros(1, iindex.numImgs);
+textprogressbar('Tf-Idf based search ');
 for i = 1 : numel(d)
     vw = d(i);
     imgs2count = iindex.vw2imgsList{vw};
@@ -26,13 +27,14 @@ for i = 1 : numel(d)
         tf = double(imgs2count(imgID)) / iindex.totalDescriptors(imgID);
         scores(1, imgID) = scores(1, imgID) + tf * idf;
     end
+    textprogressbar(i * 100.0 / numel(d));
 end
+textprogressbar(' Done');
 [scores, imgIDs] = sort(scores, 'descend');
 scores = scores(:, 1 : config.topn);
 imgIDs = imgIDs(:, 1 : config.topn);
 imgPaths = arrayfun(@(x) iindex.imgPaths(x), imgIDs);
 if isfield(config, 'geomRerank') && config.geomRerank
-    fprintf('Performing geometric reranking\n');
     res = bow_geomRerank(imgPaths, iindex.dirname, model, f, d);
 else
     res = {imgPaths, scores};
@@ -48,6 +50,7 @@ function res = bow_geomRerank(imgPaths, dirname, model, f, d)
 
 numInliers = zeros(1, numel(imgPaths));
 fullpaths = cellfun2(@(x) fullfile(dirname, x), imgPaths);
+textprogressbar('Geometric Reranking ');
 for i = 1 : numel(fullpaths)
     imgPath = fullpaths{i};
     I = imread(imgPath);
@@ -55,6 +58,8 @@ for i = 1 : numel(fullpaths)
     matches = bow_computeMatchesQuantized(d, d2);
     matches = bow_geomFilterMatches(f, f2, matches);
     numInliers(1, i) = size(matches, 2);
+    textprogressbar(i * 100.0 / numel(fullpaths));
 end
+textprogressbar(' Done');
 [numInliers, indexes] = sort(numInliers, 'descend');
 res = {imgPaths(indexes), numInliers};
