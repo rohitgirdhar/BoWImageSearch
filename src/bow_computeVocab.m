@@ -4,11 +4,16 @@ function model = bow_computeVocab(imgsDir, params, varargin)
 % 'imgsListFpath', 'path/to/file.txt' :- File contains a newline separated
 % list of image paths (relative to imgsDir) of the image files to 
 % build index upon. Typically used to set the train set.
+% 'avgSiftsPerImg', <count> :- (default: 1000). Used to pre-allocate the
+% storage array. Give an upper bound estimate. But take care that num_imgs
+% * avg_sift memory will be allocated.. so it may crash if the machine 
+% can't handle it.
 
 bow_config;
 
 p = inputParser;
 addOptional(p, 'imgsListFpath', 0);
+addOptional(p, 'avgSiftsPerImg', 400);
 parse(p, varargin{:});
 
 %% Get imgs list
@@ -23,14 +28,25 @@ end
 fullpaths = cellfun2(@(x) fullfile(imgsDir, x), frpaths);
 
 %% Read images and create set of SIFTs
-descs = []; % 128 x n dim matrix, for n SIFTs
-for i = 1 : size(fullpaths, 1)
+est_n = p.Results.avgSiftsPerImg * numel(fullpaths); % expected number of sifts
+descs = zeros(128, est_n, 'uint8'); % 128 x n dim matrix, for n SIFTs
+found_sifts = 0;
+textprogressbar('Reading SIFTs ');
+for i = 1 : numel(fullpaths)
     % best to read one by one, in case of large number of images
     I = single(rgb2gray(imread(fullpaths{i})));
     [~, d] = vl_sift(I);
-    descs = [descs, d]; % not pre-alloc as don't know how many sifts will be found
-                        % moreover, this is a one time job
+    if found_sifts + size(d, 2) <= est_n
+        descs(:, found_sifts + 1 : found_sifts + size(d, 2)) = d;
+    else
+        descs = descs(:, 1 : found_sifts);
+        descs = [descs, d];
+    end
+    found_sifts = found_sifts + size(d, 2);
+    textprogressbar(i * 100.0 / numel(fullpaths));
 end
+textprogressbar(' Done');
+descs = descs(:, 1 : found_sifts);
 fprintf('Found %d descriptors. Clustering now...\n', size(descs, 2));
 
 %% K Means cluster the SIFTs, and create a model
