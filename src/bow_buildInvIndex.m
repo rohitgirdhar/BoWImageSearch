@@ -1,12 +1,27 @@
-function iindex = bow_buildInvIndex(imgsDir, model)
+function iindex = bow_buildInvIndex(imgsDir, model, varargin)
 % Build an inverted index for all image files in 'imgsDir' (recursively
 % searched) given the visual word quantization 'model'
+% Optional Parameters:
+% 'imgsListFpath', 'path/to/file.txt' :- File contains a newline separated
+% list of image paths (relative to imgsDir) of the image files to 
+% build index upon. Typically used to set the train set.
+
+p = inputParser;
+addOptional(p, 'imgsListFpath', 0);
+parse(p, varargin{:});
 
 bow_config;
 
 %% Get imgs list
 iindex.dirname = fullfile(pwd, imgsDir);
-iindex.imgPaths = getImgFilesList(imgsDir);
+if p.Results.imgsListFpath == 0
+    iindex.imgPaths = getImgFilesList(imgsDir);
+else
+    fid = fopen(p.Results.imgsListFpath, 'r');
+    iindex.imgPaths = textscan(fid, '%s', 'Delimiter', '\n');
+    iindex.imgPaths = iindex.imgPaths{:};
+    fclose(fid);
+end
 iindex.numImgs = numel(iindex.imgPaths);
 % Add these paths to a hash map as well
 iindex.imgPath2id = containers.Map(iindex.imgPaths, ...
