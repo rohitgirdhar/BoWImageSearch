@@ -4,11 +4,11 @@ function [imgPaths, scores, all_matches] = ...
 % using bow_buildInvIndex
 % Uses TF-IDF based scoring to rank
 % config has following flags
-% config.geomRerank = 1 => do geometric reranking for topn results
+% config.geomRerank = m => do geometric reranking for top m results
 % config.topn = n => output top 'n' results (defaults to 10)
 % @return : imgPaths is the list of image paths in ranked order
 % @return scores : is the corresponding scores - tf-idf in general, or
-% number of inliers if doing geometric reranking
+% number of inliers (of top m images) if doing geometric reranking
 % @return all_matches : Only returned if the config.geomRerank = 1. A
 % cell array with {i} element = matches of I with the i^th image
 
@@ -38,22 +38,25 @@ textprogressbar(' Done');
 scores = scores(:, 1 : config.topn);
 imgIDs = imgIDs(:, 1 : config.topn);
 imgPaths = arrayfun(@(x) iindex.imgPaths(x), imgIDs);
-if isfield(config, 'geomRerank') && config.geomRerank
+if isfield(config, 'geomRerank') && config.geomRerank > 0
     [imgPaths, scores, all_matches] = ...
-        bow_geomRerank(imgPaths, iindex.dirname, model, f, d);
+        bow_geomRerank(imgPaths, iindex.dirname, model, f, d, ...
+            config.geomRerank);
 end
 
 function [imgPaths, scores, all_matches] = ...
-        bow_geomRerank(imgPaths, dirname, model, f, d)
+        bow_geomRerank(imgPaths, dirname, model, f, d, topm)
 % rerranks the rank list (only topn of it) based on number of geometrically
 % consistent inliers
 % @param imgPaths : full paths of images
 % @param f, d of the query image
+% @param topm: rerank the topm elements from imgPaths
 % @returns imgs list, number of inliers and a cell array with matches
 % objects, indexed by the img list
 
-numInliers = zeros(1, numel(imgPaths));
-fullpaths = cellfun2(@(x) fullfile(dirname, x), imgPaths);
+topm_imgPaths = imgPaths(1 : topm);
+numInliers = zeros(1, topm);
+fullpaths = cellfun2(@(x) fullfile(dirname, x), topm_imgPaths);
 textprogressbar('Geometric Reranking ');
 all_matches = cell(1, numel(fullpaths));
 for i = 1 : numel(fullpaths)
@@ -68,6 +71,6 @@ for i = 1 : numel(fullpaths)
 end
 textprogressbar(' Done');
 [numInliers, indexes] = sort(numInliers, 'descend');
-imgPaths = imgPaths(indexes);
+imgPaths = imgPaths([indexes, topm + 1 : end]);
 all_matches = all_matches(indexes);
 scores = numInliers;
