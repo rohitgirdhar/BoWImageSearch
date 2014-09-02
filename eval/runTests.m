@@ -10,8 +10,8 @@ p = inputParser;
 addOptional(p, 'imgsListFpath', 0);
 parse(p, varargin{:});
 
-bow_config;
 addpath(genpath('../src'));
+bow_config;
 
 %% Get imgs list
 if p.Results.imgsListFpath == 0
