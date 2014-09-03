@@ -13,6 +13,10 @@ if (numel(matchedPoints1) < 10 || numel(matchedPoints2) < 10 || ...
     matches = [];
     return;
 end
-[~, inliersIndex] = estimateFundamentalMatrix(matchedPoints1, ...
+try
+    [~, inliersIndex] = estimateFundamentalMatrix(matchedPoints1, ...
                         matchedPoints2, 'Method', 'RANSAC');
+catch
+    inliersIndex = [];
+end
 matches = matches(:, inliersIndex == 1);
