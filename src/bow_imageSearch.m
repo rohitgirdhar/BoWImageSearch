@@ -21,21 +21,20 @@ if ~isfield(config, 'topn')
 end
 
 [f, d] = bow_computeImageRep(I, model);
-scores = zeros(1, iindex.numImgs);
-textprogressbar('Tf-Idf based search ');
-for i = 1 : numel(d)
-    vw = d(i);
-    imgs2count = iindex.vw2imgsList{vw};
-    imgsList = imgs2count.keys;
-    idf = log10(double(iindex.numImgs / (numel(imgsList) * 1.0)));
-    for j = 1 : numel(imgsList)
-        imgID = imgsList{j};
-        tf = double(imgs2count(imgID)) / iindex.totalDescriptors(imgID);
-        scores(1, imgID) = scores(1, imgID) + tf * idf;
-    end
-    textprogressbar(i * 100.0 / numel(d));
-end
-textprogressbar(' Done');
+
+fprintf('Tf-Idf based ranking...'); tic;
+vw2imgs2count = iindex.vw2imgsList(d);
+vw2imgsCount = cellfun2(@(x) x.Count, vw2imgs2count);
+idfs = log10(double(iindex.numImgs ./ cell2mat(vw2imgsCount)));
+vw2imgs2count_array = ...
+    cellfun2(@(x) container2sparse(x, iindex.numImgs), vw2imgs2count);
+vw2imgs_tf = ...
+    cellfun2(@(x) x ./ iindex.totalDescriptors', vw2imgs2count_array);
+vw2imgs_tfidf = ...
+    cellfun(@(x, y) x .* y, vw2imgs_tf, num2cell(idfs), 'UniformOutput', false);
+scores = sum(cell2mat(vw2imgs_tfidf'), 1);
+time_elap = toc; fprintf(['Done in ', num2str(time_elap), 's\n']);
+
 [scores, imgIDs] = sort(scores, 'descend');
 scores = scores(:, 1 : config.topn);
 imgIDs = imgIDs(:, 1 : config.topn);
