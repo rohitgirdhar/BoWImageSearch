@@ -40,16 +40,20 @@ scores = scores(:, 1 : config.topn);
 imgIDs = imgIDs(:, 1 : config.topn);
 imgPaths = arrayfun(@(x) iindex.imgPaths(x), imgIDs);
 if isfield(config, 'geomRerank') && config.geomRerank > 0
+    all_idfs = log10(double(iindex.numImgs ./ ...
+        cell2mat(cellfun2(@(x) x.Count, iindex.vw2imgsList))));
     [imgPaths, scores, all_matches] = ...
-        bow_geomRerank(imgPaths, iindex.dirname, model, I, f, d, config);
+        bow_geomRerank(imgPaths, iindex.dirname, model, all_idfs, ...
+            I, f, d, config);
 end
 
 function [imgPaths, scores, all_matches] = ...
-        bow_geomRerank(imgPaths, dirname, model, I, f, d, config)
+        bow_geomRerank(imgPaths, dirname, model, idfs, I, f, d, config)
 % rerranks the rank list (only topn of it) based on number of geometrically
 % consistent inliers
 % @param imgPaths : full paths of images
-% @param f, d of the query image
+% @param idfs: IDF for each visual word
+% @param I, f, d of the query image
 % @param config.geomRerank = n (number of top images to rerank)
 % @param config.saveMatchesImageDir = directory in which to save the
 % matches images. Unset if not want to generate such images
@@ -59,11 +63,11 @@ function [imgPaths, scores, all_matches] = ...
 topm = config.geomRerank;
 
 topm_imgPaths = imgPaths(1 : topm);
-numInliers = zeros(1, topm);
+inliersIDF = zeros(1, topm);
 fullpaths = cellfun2(@(x) fullfile(dirname, x), topm_imgPaths);
 textprogressbar('Geometric Reranking ');
 all_matches = cell(1, numel(fullpaths));
-for i = 1 : numel(fullpaths)
+parfor i = 1 : numel(fullpaths)
     imgPath = fullpaths{i};
     I2 = imread(imgPath);
     [f2, d2] = bow_computeImageRep(I2, model);
@@ -76,11 +80,11 @@ for i = 1 : numel(fullpaths)
                 [imgName, '_matches.jpg']));
     end
     all_matches{i} = matches;
-    numInliers(1, i) = size(matches, 2);
+    inliersIDF(1, i) = sum(idfs(d2(matches(2, :))));
     textprogressbar(i * 100.0 / numel(fullpaths));
 end
 textprogressbar(' Done');
-[numInliers, indexes] = sort(numInliers, 'descend');
+[inliersIDF, indexes] = sort(inliersIDF, 'descend');
 imgPaths = imgPaths([indexes, topm + 1 : end]);
 all_matches = all_matches(indexes);
-scores = numInliers;
+scores = inliersIDF;
