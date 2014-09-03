@@ -29,6 +29,7 @@ else
     imgPaths = imgPaths{:};
     fclose(fid);
 end
+imgPaths = sort(imgPaths);
 fullpaths = cellfun2(@(x) fullfile(imgsDir, x), imgPaths);
 
 %% Evaluate
@@ -36,10 +37,12 @@ sumPrecision = zeros(1, 20);
 sumAP = 0;
 for i = 1 : numel(fullpaths)
     imgPathFull = fullpaths{i};
-    fprintf('Searching for %s\n', imgPaths{i});
+    fprintf('Searching for %s (%d / %d)\n', imgPaths{i}, i, numel(fullpaths));
     [class, imgName] = getImgClassFromPath(imgPaths{i});
     curOutputDir = fullfile(outputDir, class, imgName);
-    mkdir(curOutputDir);
+    if ~exist(curOutputDir, 'dir')
+        mkdir(curOutputDir);
+    end
     
     I = imread(imgPathFull);
     img_class = getImgClassFromPath(imgPathFull);
@@ -69,8 +72,8 @@ for i = 1 : numel(fullpaths)
     sumPrecision(20) = sumPrecision(20) + ...
         sum(hit_idx <= 20) / 20;
     AP = computeAP(hit_idx);
-    fprintf('AP : %f\n', AP);
     sumAP = sumAP + AP;
+    fprintf('current mAP : %f\n', sumAP / i);
 end
 meanPrecision = sumPrecision / numel(imgPaths);
 fprintf('Mean Precision: @1: %f, @3: %f. @5: %f. @10: %f, @20: %f\n', ...
