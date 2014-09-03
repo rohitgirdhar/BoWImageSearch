@@ -29,23 +29,23 @@ else
     imgPaths = imgPaths{:};
     fclose(fid);
 end
-fullpaths = cellfun2(@(x) fullfile(imgsDir, x), iindex.imgPaths);
+fullpaths = cellfun2(@(x) fullfile(imgsDir, x), imgPaths);
 
 %% Evaluate
 sumPrecision = zeros(1, 20);
 sumAP = 0;
-i = 0;
-for imgPath = fullpaths'
-    i = i + 1;
+for i = 1 : numel(fullpaths)
+    imgPathFull = fullpaths{i};
     fprintf('Searching for %s\n', imgPaths{i});
-    [~, imgName, ~] = fileparts(imgPaths{i});
-    curOutputDir = fullfile(outputDir, imgName);
+    [class, imgName] = getImgClassFromPath(imgPaths{i});
+    curOutputDir = fullfile(outputDir, class, imgName);
     mkdir(curOutputDir);
     
-    I = imread(imgPath{:});
-    img_class = getImgClassFromPath(imgPath{:});
-    config.geomRerank = 0;
+    I = imread(imgPathFull);
+    img_class = getImgClassFromPath(imgPathFull);
+    config.geomRerank = 10;
     config.topn = 2658; % all images
+    config.saveMatchesImageDir = fullfile(pwd, curOutputDir);
     [matching_imgs, ~] = bow_imageSearch(I, model, iindex, config);
     
     % write out to file
@@ -79,8 +79,8 @@ fprintf('Mean Precision: @1: %f, @3: %f. @5: %f. @10: %f, @20: %f\n', ...
 mAP = sumAP / numel(imgPaths);
 fprintf('mAP: %f\n', mAP);
 
-function class = getImgClassFromPath(path)
-[path, ~, ~] = fileparts(path);
+function [class, imgName] = getImgClassFromPath(path)
+[path, imgName, ~] = fileparts(path);
 [~, class, ~] = fileparts(path);
 
 function AP = computeAP(match_idx)
