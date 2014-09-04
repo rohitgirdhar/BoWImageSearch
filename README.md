@@ -26,9 +26,17 @@ In MATLAB:
 ```matlab
 >> model = bow_computeVocab('~/imagesDir', params);
 ```
+Alternate option: Train only on subset of images from `imagesDir/`, given from a list
+```matlab
+>> model = bow_computeVocab('~/imagesDir', params, 'imgsListFpath', '/path/to/TrainSet.txt');
+```
 #### Learn Inverted Index over corpus
 ```matlab
 >> iindex = bow_buildInvIndex('~/imagesDir', model);
+```
+Alternate option: Train only on subset of images from `imagesDir/`, given from a list
+```matlab
+>> iindex = bow_buildInvIndex('../../../datasets/hussain_hotels/corpus', model, 'imgsListFpath', '../eval/TrainSet.txt');
 ```
 #### Test time: search for a query image
 ```matlab
@@ -41,6 +49,32 @@ In MATLAB:
 ```
 Note: Geometric reranking done by fitting a fundamental matrix using RANSAC, and counting the number of inliers.
 
+### Evaluation
+The dataset should be arranged in a directory structure as follows:
+```text
+|-corpus/
+    |--class1
+    |   |--img1.jpg
+    |   |--img2.jpg
+    |--class2
+    |   |--img1.jpg
+```
+#### Split test train set
+This distribution already has `eval/TestSet.txt` and `eval/TrainSet.txt`. Use this only to recompute these sets.
+```matlab
+>> [train, test] = splitTestTrain('path/to/corpus/', 700); % 700 is the number of images in test set. remaining in train.
+>> f = fopen('TrainSet.txt', 'w'); % write it out to this file
+>> for i = 1 : numel(train)
+     fprintf(f, '%s\n', train{i});
+   end
+>> % similarly for the test set
+```
+#### Running evaluation
+```matlab
+>> matlabpool open <ncores> % use parpool on newer matlab version
+>> cd $PROJECT_ROOT/eval
+>> runTests('/path/to/corpus/', model, iindex, '/path/to/output_dir', 'imgsListFpath', '/path/to/TestSet.txt')
+```
 ----
 
 **Copyright (C) 2014 by Rohit Girdhar**
