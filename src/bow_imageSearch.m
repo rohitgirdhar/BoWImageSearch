@@ -22,7 +22,7 @@ end
 
 [f, d] = bow_computeImageRep(I, model);
 
-fprintf('Tf-Idf based ranking...'); tic;
+fprintf('Tf-Idf...'); tic;
 vw2imgs2count = iindex.vw2imgsList(d);
 vw2imgsCount = cellfun2(@(x) x.Count, vw2imgs2count);
 idfs = log10(double(iindex.numImgs ./ cell2mat(vw2imgsCount)));
@@ -33,7 +33,7 @@ vw2imgs_tf = ...
 vw2imgs_tfidf = ...
     cellfun(@(x, y) x .* y, vw2imgs_tf, num2cell(idfs), 'UniformOutput', false);
 scores = sum(cell2mat(vw2imgs_tfidf'), 1);
-time_elap = toc; fprintf(['Done in ', num2str(time_elap), 's\n']);
+time_elap = toc; fprintf('Done in %0.2fs\n', time_elap);
 
 [scores, imgIDs] = sort(scores, 'descend');
 scores = scores(:, 1 : config.topn);
@@ -65,7 +65,7 @@ topm = config.geomRerank;
 topm_imgPaths = imgPaths(1 : topm);
 inliersIDF = zeros(1, topm);
 fullpaths = cellfun2(@(x) fullfile(dirname, x), topm_imgPaths);
-textprogressbar('Geometric Reranking ');
+fprintf('Geometric Reranking...'); tic;
 all_matches = cell(1, numel(fullpaths));
 parfor i = 1 : numel(fullpaths)
     imgPath = fullpaths{i};
@@ -81,9 +81,8 @@ parfor i = 1 : numel(fullpaths)
     end
     all_matches{i} = matches;
     inliersIDF(1, i) = sum(idfs(d2(matches(2, :))));
-    textprogressbar(i * 100.0 / numel(fullpaths));
 end
-textprogressbar(' Done');
+time_elap = toc; fprintf('Done in %0.2fs\n', time_elap);
 [inliersIDF, indexes] = sort(inliersIDF, 'descend');
 imgPaths = imgPaths([indexes, topm + 1 : end]);
 all_matches = all_matches(indexes);
