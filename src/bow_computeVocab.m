@@ -34,7 +34,12 @@ found_sifts = 0;
 textprogressbar('Reading SIFTs ');
 for i = 1 : numel(fullpaths)
     % best to read one by one, in case of large number of images
-    I = single(rgb2gray(imread(fullpaths{i})));
+    try
+        I = single(rgb2gray(imread(fullpaths{i})));
+    catch
+        fprintf(2, 'Unable to read %s\n', fullpaths{i});
+        continue;
+    end
     [~, d] = vl_sift(I);
     if found_sifts + size(d, 2) <= est_n
         descs(:, found_sifts + 1 : found_sifts + size(d, 2)) = d;
