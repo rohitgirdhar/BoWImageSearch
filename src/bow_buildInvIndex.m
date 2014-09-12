@@ -42,17 +42,21 @@ end
 
 textprogressbar('Computing inv index over all images: ');
 for i = 1 : iindex.numImgs
-    I = imread(fullpaths{i});
-    [~, d] = bow_computeImageRep(I, model);
-    iindex.totalDescriptors(i) = numel(d);
-    for j = 1 : numel(d)
+    try
+        I = imread(fullpaths{i});
+        [~, d] = bow_computeImageRep(I, model);
+        iindex.totalDescriptors(i) = numel(d);
+        for j = 1 : numel(d)
         imgsList = iindex.vw2imgsList{d(j)};
-        if imgsList.isKey(i)
-            imgsList(i) = imgsList(i) + 1;
-        else
-            imgsList(i) = 1;
+            if imgsList.isKey(i)
+                imgsList(i) = imgsList(i) + 1;
+            else
+                imgsList(i) = 1;
+            end
+            iindex.vw2imgsList{d(j)} = imgsList;
         end
-        iindex.vw2imgsList{d(j)} = imgsList;
+    catch
+        continue;
     end
     textprogressbar(i * 100 / iindex.numImgs);
 end
