@@ -6,8 +6,6 @@ function bow_visualizeMatching(I1, I2, f1, f2, matches, varargin)
 % @param (optional): 'save', 'filename' to instead save the matches to a
 % file and not show on the screen
 
-bow_config;
-
 p = inputParser;
 addOptional(p, 'save', 0);
 parse(p, varargin{:});

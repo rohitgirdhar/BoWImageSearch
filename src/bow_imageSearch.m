@@ -69,7 +69,11 @@ fprintf('Geometric Reranking...'); tic;
 all_matches = cell(1, numel(fullpaths));
 parfor i = 1 : numel(fullpaths)
     imgPath = fullpaths{i};
-    I2 = imread(imgPath);
+    try
+        I2 = imread(imgPath);
+    catch
+        continue;
+    end
     [f2, d2] = bow_computeImageRep(I2, model);
     matches = bow_computeMatchesQuantized(d, d2);
     matches = bow_geomFilterMatches(f, f2, matches);
@@ -87,3 +91,4 @@ time_elap = toc; fprintf('Done in %0.2fs\n', time_elap);
 imgPaths = imgPaths([indexes, topm + 1 : end]);
 all_matches = all_matches(indexes);
 scores = inliersIDF;
+
