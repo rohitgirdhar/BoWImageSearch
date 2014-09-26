@@ -8,6 +8,8 @@ function model = bow_computeVocab(imgsDir, params, varargin)
 % storage array. Give an upper bound estimate. But take care that num_imgs
 % * avg_sift memory will be allocated.. so it may crash if the machine 
 % can't handle it.
+% params.numWords = size of voacbulary to learn
+% params.maxImgsForVocab = max number of images to use for computing it
 
 bow_config;
 
@@ -26,6 +28,16 @@ else
     fclose(fid);
 end
 fullpaths = cellfun2(@(x) fullfile(imgsDir, x), frpaths);
+
+if ~isfield(params, 'maxImgsForVocab')
+    params.maxImgsForVocab = 10000;
+end
+if numel(fullpaths) > params.maxImgsForVocab
+    fprintf('Too many images (%d), randomly sampling %d of those\n', ...
+            numel(fullpaths), params.maxImgsForVocab);
+    fullpaths = fullpaths(randsample(numel(fullpaths), ...
+            params.maxImgsForVocab));
+end
 
 %% Read images and create set of SIFTs
 est_n = p.Results.avgSiftsPerImg * numel(fullpaths); % expected number of sifts
