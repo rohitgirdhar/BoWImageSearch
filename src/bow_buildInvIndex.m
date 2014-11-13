@@ -1,6 +1,7 @@
 function iindex = bow_buildInvIndex(imgsDir, model, varargin)
 % Build an inverted index for all image files in 'imgsDir' (recursively
 % searched) given the visual word quantization 'model'
+% model can be path to mat file too
 % Optional Parameters:
 % 'imgsListFpath', 'path/to/file.txt' :- File contains a newline separated
 % list of image paths (relative to imgsDir) of the image files to 
@@ -11,6 +12,11 @@ addOptional(p, 'imgsListFpath', 0);
 parse(p, varargin{:});
 
 bow_config;
+
+if isa(model, 'char')
+    model_fpath = model;
+    load(model_fpath, 'model');
+end
 
 %% Get imgs list
 iindex.dirname = fullfile(pwd, imgsDir);
