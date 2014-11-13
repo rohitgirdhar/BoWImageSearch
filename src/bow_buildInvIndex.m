@@ -4,11 +4,13 @@ function iindex = bow_buildInvIndex(imgsDir, model, varargin)
 % model can be path to mat file too
 % Optional Parameters:
 % 'imgsListFpath', 'path/to/file.txt' :- File contains a newline separated
+% 'resDir', 'path/to/results'
 % list of image paths (relative to imgsDir) of the image files to 
 % build index upon. Typically used to set the train set.
 
 p = inputParser;
 addOptional(p, 'imgsListFpath', 0);
+addOptional(p, 'resDir', 0);
 parse(p, varargin{:});
 
 bow_config;
@@ -67,3 +69,10 @@ for i = 1 : iindex.numImgs
     textprogressbar(i * 100 / iindex.numImgs);
 end
 textprogressbar(' Done');
+
+if p.Results.resDir
+    resDir = p.Results.resDir;
+    fprintf('Saving to %s\n', fullfile(resDir, 'iindex.mat'));
+    save(fullfile(resDir, 'iindex.mat'), 'iindex');
+end
+
