@@ -6,7 +6,6 @@ function runTests(imgsDir, model, iindex, outputDir, varargin)
 % 'imgsListFpath', 'path/to/file.txt' :- File contains a newline separated
 % list of image paths (relative to imgsDir) of the image files to 
 % build index upon. Typically used to set the train set.
-% 'runSyncDir' 'path/to/dir/' gives the path to a dir to use for syncing
 % All the code in this file is specific to dataset arranged as:
 % -imgsDir
 %   |--class1
