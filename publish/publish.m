@@ -1,7 +1,7 @@
 addpath('../../../../utils/htmlWriter/');
 
 params.sortableTable = true;
-params.numPerPage = 10;
+params.numPerPage = 20;
 params.pageLinkBreaks = 3;
 
 
@@ -16,7 +16,7 @@ end
 
 [h,t] = addHeader(h,t,row);
 
-res_folder = '../eval/results/res_vlg';
+res_folder = 'res_vlg';
 imgs_folder = 'http://www.andrew.cmu.edu/user/rgirdhar/projects/001_Matching/hussain_corpus/';
 test_list_fpath = '../eval/TestSet.txt';
 fid = fopen(test_list_fpath);

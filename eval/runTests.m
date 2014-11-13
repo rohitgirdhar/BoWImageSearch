@@ -6,6 +6,7 @@ function runTests(imgsDir, model, iindex, outputDir, varargin)
 % 'imgsListFpath', 'path/to/file.txt' :- File contains a newline separated
 % list of image paths (relative to imgsDir) of the image files to 
 % build index upon. Typically used to set the train set.
+% 'runSyncDir' 'path/to/dir/' gives the path to a dir to use for syncing
 % All the code in this file is specific to dataset arranged as:
 % -imgsDir
 %   |--class1
@@ -40,14 +41,24 @@ for i = 1 : numel(fullpaths)
     fprintf('Searching for %s (%d / %d)\n', imgPaths{i}, i, numel(fullpaths));
     [class, imgName] = getImgClassFromPath(imgPaths{i});
     curOutputDir = fullfile(outputDir, class, imgName);
+    
+    if exist(fullfile(curOutputDir, 'top.txt'), 'file')
+        fprintf('Output already exists for this\n');
+        continue;
+    elseif exist(fullfile(curOutputDir, 'top.txt.lock'), 'dir')
+        fprintf('Some other worker doing this file\n');
+        continue;
+    end
+    mkdir(fullfile(curOutputDir, 'top.txt.lock'));
+
     if ~exist(curOutputDir, 'dir')
         mkdir(curOutputDir);
     end
     
     I = imread(imgPathFull);
     img_class = getImgClassFromPath(imgPathFull);
-    config.geomRerank = 10;
-    config.topn = 2658; % all images
+    config.geomRerank = 0;
+    config.topn = 10000; % all images
     config.saveMatchesImageDir = fullfile(pwd, curOutputDir);
     [matching_imgs, ~] = bow_imageSearch(I, model, iindex, config);
     
@@ -57,7 +68,11 @@ for i = 1 : numel(fullpaths)
         fprintf(fid, '%s\n', img{:});
     end
     fclose(fid);
-    
+    try
+        rmdir(fullfile(curOutputDir, 'top.txt.lock'));
+    catch
+    end
+
     matching_classes = cellfun2(@(x) getImgClassFromPath(x), ...
         matching_imgs);
     hit_idx = find(strcmp(matching_classes, img_class));
