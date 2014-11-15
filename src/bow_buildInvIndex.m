@@ -66,13 +66,18 @@ for i = 1 : iindex.numImgs
     catch
         continue;
     end
+    if p.Results.resDir && mod(i, 50) == 0
+        resDir = p.Results.resDir;
+        fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
+        save(fullfile(resDir, 'iindex.mat'), 'iindex', '-v7.3');
+    end
     textprogressbar(i * 100 / iindex.numImgs);
 end
 textprogressbar(' Done');
 
+
 if p.Results.resDir
     resDir = p.Results.resDir;
-    fprintf('Saving to %s\n', fullfile(resDir, 'iindex.mat'));
-    save(fullfile(resDir, 'iindex.mat'), 'iindex');
+    fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
+    save(fullfile(resDir, 'iindex.mat'), 'iindex', '-v7.3');
 end
-
