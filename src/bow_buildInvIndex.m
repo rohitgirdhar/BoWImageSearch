@@ -66,7 +66,7 @@ for i = 1 : iindex.numImgs
     catch
         continue;
     end
-    if len(p.Results.resDir) > 1 && mod(i, 50) == 0
+    if length(p.Results.resDir) > 1 && mod(i, 50) == 0
         resDir = p.Results.resDir;
         fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
         save(fullfile(resDir, 'iindex.mat'), 'iindex', '-v7.3');
