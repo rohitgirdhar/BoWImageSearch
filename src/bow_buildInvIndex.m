@@ -10,16 +10,11 @@ function iindex = bow_buildInvIndex(imgsDir, model, resDir, varargin)
 
 p = inputParser;
 addOptional(p, 'imgsListFpath', 0);
-addOptional(p, 'SIFTPeakThresh', 3);
 parse(p, varargin{:});
 indexfpath = fullfile(resDir, 'iindex.mat');
 if exist(indexfpath, 'file')
     fprintf(2, 'The iindex file already exists. Remove it first\n');
     return;
-end
-try
-    p.Results.SIFTPeakThresh = str2num(p.Results.SIFTPeakThresh);
-catch
 end
 index = matfile(indexfpath, 'Writable', true);
 
@@ -60,7 +55,7 @@ end
 for i = 1 : index.numImgs
     try
         I = imread(fullpaths{i});
-        [~, d] = bow_computeImageRep(I, model, 'PeakThresh', p.Results.SIFTPeakThresh);
+        [~, d] = bow_computeImageRep(I, model, 'PeakThresh', 3);
         index.totalDescriptors(i, 1) = numel(d);
         for j = 1 : numel(d)
             imgsList = vw2imgsList{d(j)};
