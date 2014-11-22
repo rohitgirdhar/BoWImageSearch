@@ -1,4 +1,4 @@
-function iindex = bow_buildInvIndex(imgsDir, model, varargin)
+function iindex = bow_buildInvIndex(imgsDir, model, resDir, varargin)
 % Build an inverted index for all image files in 'imgsDir' (recursively
 % searched) given the visual word quantization 'model'
 % model can be path to mat file too
@@ -10,8 +10,13 @@ function iindex = bow_buildInvIndex(imgsDir, model, varargin)
 
 p = inputParser;
 addOptional(p, 'imgsListFpath', 0);
-addOptional(p, 'resDir', 0);
 parse(p, varargin{:});
+indexfpath = fullfile(resDir, 'iindex.mat');
+if exist(indexfpath, 'file')
+    fprintf(2, 'The iindex file already exists. Remove it first\n');
+    return;
+end
+index = matfile(indexfpath, 'Writable', true);
 
 bow_config;
 
@@ -21,62 +26,61 @@ if isa(model, 'char')
 end
 
 %% Get imgs list
-iindex.dirname = fullfile(pwd, imgsDir);
+index.dirname = fullfile(pwd, imgsDir);
 if p.Results.imgsListFpath == 0
-    iindex.imgPaths = getImgFilesList(imgsDir);
+    index.imgPaths = getImgFilesList(imgsDir);
 else
     fid = fopen(p.Results.imgsListFpath, 'r');
-    iindex.imgPaths = textscan(fid, '%s', 'Delimiter', '\n');
-    iindex.imgPaths = iindex.imgPaths{:};
+    index.imgPaths = textscan(fid, '%s', 'Delimiter', '\n');
+    index.imgPaths = iindex.imgPaths{:};
     fclose(fid);
 end
-iindex.numImgs = numel(iindex.imgPaths);
+index.numImgs = numel(index.imgPaths);
 % Add these paths to a hash map as well
-iindex.imgPath2id = containers.Map(iindex.imgPaths, ...
-                        1 : iindex.numImgs);
-fullpaths = cellfun2(@(x) fullfile(imgsDir, x), iindex.imgPaths);
+index.imgPath2id = containers.Map(index.imgPaths, ...
+                        1 : index.numImgs);
+fullpaths = cellfun2(@(x) fullfile(imgsDir, x), index.imgPaths);
 
 %% create inverted index
-iindex.totalDescriptors = zeros(iindex.numImgs, 1); % will store the total # of words in each image
+index.totalDescriptors = zeros(index.numImgs, 1); % will store the total # of words in each image
 % Create a cell array of vocabSize containers.Map (Assuming vocab ids are
 % 1..n). Each element stores <imgID : times that VW appears in that image>
 % Have to call it multiple times to initialize in a loop.. using 
 % `repmat` or `deal` simply makes multiple references to same object and 
 % that doesn't work
 for i = 1 : model.vocabSize
-    iindex.vw2imgsList{i} = ...
-        containers.Map('KeyType', 'int64', 'ValueType', 'int64');
+    vw2imgsList{i} = containers.Map('KeyType', 'int64', 'ValueType', 'int64');
 end
 
 textprogressbar('Computing inv index over all images: ');
-for i = 1 : iindex.numImgs
+for i = 1 : index.numImgs
     try
         I = imread(fullpaths{i});
         [~, d] = bow_computeImageRep(I, model);
-        iindex.totalDescriptors(i) = numel(d);
+        index.totalDescriptors(i, 1) = numel(d);
         for j = 1 : numel(d)
-        imgsList = iindex.vw2imgsList{d(j)};
+            imgsList = vw2imgsList{d(j)};
             if imgsList.isKey(i)
                 imgsList(i) = imgsList(i) + 1;
             else
                 imgsList(i) = 1;
             end
-            iindex.vw2imgsList{d(j)} = imgsList;
+            vw2imgsList{d(j)} = imgsList;
         end
-    catch
+    catch e
+        disp(getReport(e));
         continue;
     end
-    if length(p.Results.resDir) > 1 && mod(i, 50) == 0
-        resDir = p.Results.resDir;
-        fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
-        save(fullfile(resDir, 'iindex.mat'), 'iindex', '-v7.3');
+    textprogressbar(i * 100 / index.numImgs);
+    if mod(i, 50) == 0
+        index.vw2imgsList = vw2imgsList;
     end
-    textprogressbar(i * 100 / iindex.numImgs);
 end
+index.vw2imgsList = vw2imgsList;
 textprogressbar(' Done');
 
 
-if p.Results.resDir
+if 0
     resDir = p.Results.resDir;
     fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
     save(fullfile(resDir, 'iindex.mat'), 'iindex', '-v7.3');
