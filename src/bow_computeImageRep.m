@@ -10,5 +10,5 @@ try % to handle gray images
 catch
 end
 I = single(I);
-[f, d] = vl_sift(I);
+[f, d] = vl_sift(I, 'PeakThresh', 5);
 bins = uint64(vl_kdtreequery(model.kdtree, model.vocab, double(d)));

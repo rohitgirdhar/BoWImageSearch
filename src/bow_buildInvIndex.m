@@ -52,7 +52,6 @@ for i = 1 : model.vocabSize
     vw2imgsList{i} = containers.Map('KeyType', 'int64', 'ValueType', 'int64');
 end
 
-textprogressbar('Computing inv index over all images: ');
 for i = 1 : index.numImgs
     try
         I = imread(fullpaths{i});
@@ -71,13 +70,12 @@ for i = 1 : index.numImgs
         disp(getReport(e));
         continue;
     end
-    textprogressbar(i * 100 / index.numImgs);
-    if mod(i, 50) == 0
+    fprintf(2, 'nFeat = %d. Indexed (%d / %d)\n', numel(d), i, index.numImgs);
+    if mod(i, 1000) == 0
         index.vw2imgsList = vw2imgsList;
     end
 end
 index.vw2imgsList = vw2imgsList;
-textprogressbar(' Done');
 
 
 if 0
