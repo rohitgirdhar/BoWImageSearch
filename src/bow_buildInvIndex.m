@@ -16,7 +16,7 @@ if exist(indexfpath, 'file')
     fprintf(2, 'The iindex file already exists. Remove it first\n');
     return;
 end
-index = matfile(indexfpath, 'Writable', true);
+%index = matfile(indexfpath, 'Writable', true);
 
 bow_config;
 
@@ -78,8 +78,8 @@ end
 index.vw2imgsList = vw2imgsList;
 
 
-if 0
+if 1
     resDir = p.Results.resDir;
     fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
-    save(fullfile(resDir, 'iindex.mat'), 'iindex', '-v7.3');
+    save(fullfile(resDir, 'iindex.mat'), 'index', '-v7.3');
 end
