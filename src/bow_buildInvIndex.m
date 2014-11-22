@@ -17,6 +17,10 @@ if exist(indexfpath, 'file')
     fprintf(2, 'The iindex file already exists. Remove it first\n');
     return;
 end
+try
+    p.Results.SIFTPeakThresh = str2num(p.Results.SIFTPeakThresh);
+catch
+end
 index = matfile(indexfpath, 'Writable', true);
 
 bow_config;
