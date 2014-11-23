@@ -79,7 +79,6 @@ index.vw2imgsList = vw2imgsList;
 
 
 if 1
-    resDir = p.Results.resDir;
     fprintf('Saving to %s after %d files\n', fullfile(resDir, 'iindex.mat'), i);
     save(fullfile(resDir, 'iindex.mat'), 'index', '-v7.3');
 end
