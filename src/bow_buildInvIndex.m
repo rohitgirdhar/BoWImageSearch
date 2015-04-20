@@ -26,7 +26,7 @@ if isa(model, 'char')
 end
 
 %% Get imgs list
-index.dirname = fullfile(pwd, imgsDir);
+index.dirname = imgsDir;
 if p.Results.imgsListFpath == 0
     index.imgPaths = getImgFilesList(imgsDir);
 else
